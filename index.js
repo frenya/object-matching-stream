@@ -28,6 +28,10 @@
             debug('Finished writing stuff!!');
 			this.matcher.end();
             this._eof = true;
+	        if (this._queueDrained) {
+				this._queueDrained = false;
+            	this._read(1);
+        	}
         });
     }
 
