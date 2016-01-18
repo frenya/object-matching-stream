@@ -1,7 +1,8 @@
 var ObjectMatcher = require('./matcher');
 
 var matcher = new ObjectMatcher({
-	targets: 'quick brown fox jumped over a lazy dog'.split(' ')
+	targets: 'quick brown fox jumped over a lazy dog'.split(' '),
+	maxDistance: 2
 });
 
 var distances = matcher.calculateTargetDistances('bomb');
@@ -22,3 +23,15 @@ matcher.push('b');
 matcher.push('xxx');
 matcher.push('jumper');
 matcher.end();
+
+/*
+matcher.push('a');
+matcher.push('quick');
+matcher.push('fox');
+matcher.push('over');
+matcher.push('dog');
+matcher.push('brown');
+matcher.push('jumped');
+matcher.push('lazy');
+matcher.end();
+*/
