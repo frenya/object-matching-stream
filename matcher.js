@@ -15,6 +15,8 @@
         this.distanceFunction = opts.distanceFunction || defaultDistance;
 		this.maxDistance = opts.maxDistance || Number.MAX_VALUE;
 		
+		debug('Matching ' + this.targets.length + ' items with max distance ' + this.maxDistance);
+		
 		// Local variables
 		this.inputs = [];
 		this.inputDistances = [];
