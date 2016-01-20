@@ -73,7 +73,7 @@
 		var me = this;
 		var distances = this.targets.map(function(target, i) {
 			var dist = me.distanceFunction(obj, target);
-			return target ? { index: i, distance: dist } : null;
+			return (target !== null) ? { index: i, distance: dist } : null;
 		}).sort(function(a, b) { 
 			var d1 = a ? a.distance : Number.MAX_VALUE,
 				d2 = b ? b.distance : Number.MAX_VALUE;
