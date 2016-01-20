@@ -15,7 +15,7 @@
         stream.Duplex.call(this, {objectMode: true});
         
 		// Setup the object matcher
-		this.matcher = new ObjectMatcher(opts);
+		this.matcher = new ObjectMatcher(opts || {});
 		this.matcher.onmatch = this.handleMatch.bind(this);
 		this.matcher.onmiss = this.handleMiss.bind(this);
 		
