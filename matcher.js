@@ -126,7 +126,13 @@
 			
 			// When reporting identical matches, remove them from targets
 			// so that no target can be matched twice
-			if (reportOnlyIdenticalAndRemoveThem) this.targets[nearestMatch.index] = null;
+			if (reportOnlyIdenticalAndRemoveThem) { 
+        this.targets[nearestMatch.index] = null;
+        
+        // We might be replacing an existing match, so let's rematch it
+        var targetBestMatch = this.bestMatches[nearestMatch.index];
+				if (targetBestMatch) this.findBestMatchForIndex(targetBestMatch.index);
+      }
 		}
 		else return false;
 		
