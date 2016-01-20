@@ -74,7 +74,13 @@
 		var distances = this.targets.map(function(target, i) {
 			var dist = me.distanceFunction(obj, target);
 			return (target !== null) ? { index: i, distance: dist } : null;
-		}).sort(function(a, b) { 
+		}).filter(function(match) {
+      // Don't store invalid or too distant matches
+      if (!match || match.distance > me.maxDistance) return false;
+      
+      var targetBestMatch = me.bestMatches[match.index];
+      return (!targetBestMatch || targetBestMatch.distance > match.distance);
+    }).sort(function(a, b) { 
 			var d1 = a ? a.distance : Number.MAX_VALUE,
 				d2 = b ? b.distance : Number.MAX_VALUE;
 			return d1 - d2;

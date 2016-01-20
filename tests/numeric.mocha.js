@@ -49,6 +49,13 @@ describe('NumericMatching', function() {
         assert(objects.length === inputData.length);
         assert.deepStrictEqual(objects, [ 
           { source: 925, target: 925, distance: 0 },
+          { source: 852 },
+          { source: 385 },
+          { source: 766 },
+          { source: 801 },
+          { source: 746 },
+          { source: 925 },
+          { source: 683 }, 
           { source: 914 },
           { source: 934, target: 1000, distance: 66 },
           { source: 330 },
@@ -57,17 +64,10 @@ describe('NumericMatching', function() {
           { source: 834 },
           { source: 328 },
           { source: 594 },
-          { source: 852 },
           { source: 416, target: 500, distance: 84 },
           { source: 49, target: 50, distance: 1 },
-          { source: 385 },
-          { source: 766 },
-          { source: 801 },
-          { source: 746 },
           { source: 243, target: 200, distance: 43 },
-          { source: 925 },
-          { source: 20, target: 0, distance: 20 },
-          { source: 683 } 
+          { source: 20, target: 0, distance: 20 }
         ]);
         done();
       }));
