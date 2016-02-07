@@ -71,9 +71,10 @@
 
     }
 
-    ObjectMatchingStream.prototype.handleMiss = function (input) {
+    ObjectMatchingStream.prototype.handleMiss = function (input, target) {
 
-        this.enqueueObject({ source: input });
+        if (input) this.enqueueObject({ source: input });
+        else this.enqueueObject({ target: target });
 
     }
 
