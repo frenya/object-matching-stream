@@ -1,4 +1,4 @@
-var assert = require('assert'),
+var assert = require('chai').assert,
     Oms = require('..'),
     StreamTest = require('streamtest')['v2'];
 
@@ -49,21 +49,21 @@ describe('NumericMatching', function() {
                 assert.equal(objects.length, inputData.length);
                 assert.deepEqual(objects, [ 
                     { source: 925, target: 925, distance: 0 },
+                    { source: 914 },
+                    { source: 834 },
                     { source: 852 },
+                    { source: 594 },
+                    { source: 330 },
                     { source: 385 },
                     { source: 766 },
                     { source: 801 },
                     { source: 746 },
-                    { source: 925 },
-                    { source: 683 }, 
-                    { source: 914 },
-                    { source: 934, target: 1000, distance: 66 },
-                    { source: 330 },
-                    { source: 116, target: 100, distance: 16 },
-                    { source: 46 },
-                    { source: 834 },
                     { source: 328 },
-                    { source: 594 },
+                    { source: 925 },
+                    { source: 46 },
+                    { source: 683 }, 
+                    { source: 934, target: 1000, distance: 66 },
+                    { source: 116, target: 100, distance: 16 },
                     { source: 416, target: 500, distance: 84 },
                     { source: 49, target: 50, distance: 1 },
                     { source: 243, target: 200, distance: 43 },
@@ -90,9 +90,10 @@ describe('NumericMatching', function() {
                 // console.log(err, objects);
                 assert(!err);
                 assert(objects);
-                assert(objects.length === inputData.length);
+                assert.equal(objects.length, inputData.length + 2);     // 2 unmatched targets
                 assert.deepEqual(objects, [ 
                     { source: 925, target: 925, distance: 0 },
+                    { source: 914 },
                     { source: 934 },
                     { source: 330 },
                     { source: 834 },
@@ -105,13 +106,16 @@ describe('NumericMatching', function() {
                     { source: 801 },
                     { source: 746 },
                     { source: 925 },
-                    { source: 683 },
-                    { source: 914 },
-                    { source: 116, target: 100, distance: 16 },
                     { source: 46 },
+                    { source: 683 },
+                    { source: 116, target: 100, distance: 16 },
                     { source: 49, target: 50, distance: 1 },
                     { source: 243, target: 200, distance: 43 },
-                    { source: 20, target: 0, distance: 20 }
+                    { source: 20, target: 0, distance: 20 },
+                    
+                    // Unmatched targets
+                    { target: 500 },
+                    { target: 1000 }
                 ]);
                 done();
             }));
