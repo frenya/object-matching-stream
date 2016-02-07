@@ -4,8 +4,8 @@
   "description": "A stream that matches incoming objects against a list of targets, finding the best match for every object.",
   "main": "index.js",
   "scripts": {
-    "test": "mocha tests/*.mocha.js",
-    "cover": "istanbul cover _mocha --report html -- tests/*.mocha.js -R spec -t 5000"
+    "test": "mocha --recursive",
+    "cover": "istanbul cover _mocha --report html -- --recursive -R spec -t 5000"
   },
   "keywords": [
     "object",
