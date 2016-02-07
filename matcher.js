@@ -21,6 +21,10 @@
         this.inputs = [];
         this.inputDistances = [];
         this.bestMatches = [];
+        
+        // Measuring matching matrix's size high watermark
+        this.arraySizes = [];
+        this.matrixSizeHWM = 0;
 
         // Callbacks
         this.onmatch = opts.onmatch || defaultOnMatch;
@@ -38,11 +42,18 @@
         this.inputs.push(obj);
         this.inputDistances.push(distances);
 
+        // Update best matches (recursively)
         this.findBestMatchForIndex(inputIndex);
 
+        var hwm = this.arraySizes.reduce(function (a, b) { return a + b; }, 0);
+        this.matrixSizeHWM = Math.max(this.matrixSizeHWM, hwm);
+        
     }
 
     ObjectMatcher.prototype.end = function () {
+
+        // Report the high water mark
+        debug('HWM: ' + this.matrixSizeHWM);
 
         var me = this;
         this.inputs.forEach(function (input, index) {
@@ -117,12 +128,15 @@
                 // Recursively find best match for the input we just replaced
                 if (targetBestMatch) this.findBestMatchForIndex(targetBestMatch.index);
 
-                return;
+                break;
             }
 
             // Remove the first item and continue with the next best match
             distances.shift();
         }
+        
+        // Log array size for performance measurements
+        this.arraySizes[inputIndex] = distances.length;
         
         // This object is now a MISS
         if (distances.length === 0) this.reportInput(inputIndex);
