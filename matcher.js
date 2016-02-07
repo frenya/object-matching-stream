@@ -19,7 +19,7 @@
 
         // Local variables
         this.inputs = [];
-        this.inputDistances = [];
+        this.inputMatches = [];
         this.bestMatches = [];
         
         // Measuring matching matrix's size high watermark
@@ -40,11 +40,11 @@
 
         debug('Processing ' + input);
 
-        var distances = this.calculateTargetDistances(input);
+        var matches = this.calculateTargetMatches(input);
 
         var inputIndex = this.inputs.length;
         this.inputs.push(input);
-        this.inputDistances.push(distances);
+        this.inputMatches.push(matches);
 
         // Update best matches (recursively)
         this.findBestMatchForIndex(inputIndex);
@@ -90,17 +90,18 @@
      * - the filter() function removes all non-eligible distances
      * - the sort() function makes sure better match always precedes a worse one
 	 */
-    ObjectMatcher.prototype.calculateTargetDistances = function(input) {
+    ObjectMatcher.prototype.calculateTargetMatches = function(input) {
 
         var me = this;
-        var distances = this.targets.map(function(target, i) {
+        return this.targets.map(function(target, i) {
             var dist = me.distanceFunction(input, target);
-            return (target !== null) ? { index: i, distance: dist } : null;
+            return (target !== null) ? { targetIndex: i, distance: dist } : null;
         }).filter(function(match) {
             // Don't store invalid or too distant matches
             if (!match || match.distance > me.maxDistance) return false;
 
-            var targetBestMatch = me.bestMatches[match.index];
+            // Only store matches that are closer than the current best match
+            var targetBestMatch = me.bestMatches[match.targetIndex];
             return (!targetBestMatch || targetBestMatch.distance > match.distance);
         }).sort(function(a, b) { 
             var d1 = a ? a.distance : Number.MAX_VALUE,
@@ -108,13 +109,11 @@
             return d1 - d2;
         });
 
-        return distances;
-
     }
 
     /**
      * Goes through  all the eligible matches for a give input
-     * (by shifting the inputDistances[inputIndex] array)
+     * (by shifting the inputMatches[inputIndex] array)
      * until it finds one that is the best match for a particular target.
      *
      * If successful, updates the bestMatches array and when applicable
@@ -129,36 +128,36 @@
 
         // These are the distances of this particular input
         // from all the targets in increasing order of distance.
-        var distances = this.inputDistances[inputIndex];
-        debug('in ' + JSON.stringify(distances));
+        var matches = this.inputMatches[inputIndex];
+        debug('in ' + JSON.stringify(matches));
 
-        while (distances.length > 0) {
-            var dist = distances[0],
-                targetBestMatch = this.bestMatches[dist.index];		// This is the target's best match so far
+        while (matches.length > 0) {
+            var nearestMatch = matches[0],
+                targetBestMatch = this.bestMatches[nearestMatch.targetIndex];		// This is the target's best match so far
 
-            if (!targetBestMatch || targetBestMatch.distance > dist.distance) {
+            if (!targetBestMatch || targetBestMatch.distance > nearestMatch.distance) {
                 // We are a better match, let's update the best matches record
-                this.bestMatches[dist.index] = { index: inputIndex, distance: dist.distance };
-                debug('=> ' + this.targets[dist.index] + '[' + dist.distance + ']');
+                this.bestMatches[nearestMatch.targetIndex] = { inputIndex: inputIndex, distance: nearestMatch.distance };
+                debug('=> ' + this.targets[nearestMatch.targetIndex] + '[' + nearestMatch.distance + ']');
 
                 // If this is a perfect match, report it now
-                if (dist.distance === 0) this.reportInput(inputIndex);
+                if (nearestMatch.distance === 0) this.reportInput(inputIndex);
                 
                 // Recursively find best match for the input we just replaced
-                if (targetBestMatch) this.findBestMatchForIndex(targetBestMatch.index);
+                if (targetBestMatch) this.findBestMatchForIndex(targetBestMatch.inputIndex);
 
                 break;
             }
 
             // Remove the first item and continue with the next best match
-            distances.shift();
+            matches.shift();
         }
         
         // Log array size for performance measurements
-        this.arraySizes[inputIndex] = distances.length;
+        this.arraySizes[inputIndex] = matches.length;
         
         // This object is now a MISS
-        if (distances.length === 0) this.reportInput(inputIndex);
+        if (matches.length === 0) this.reportInput(inputIndex);
 
     }
     
@@ -169,17 +168,17 @@
      */
     ObjectMatcher.prototype.reportInput = function (inputIndex) {
         
-        var distances = this.inputDistances[inputIndex],
-            nearestMatch = distances[0];
+        var matches = this.inputMatches[inputIndex],
+            nearestMatch = matches[0];
         
         if (nearestMatch) {
             // if (nearestMatch.distance !== 0) return;
             
-            var targetIndex = nearestMatch.index;
+            var targetIndex = nearestMatch.targetIndex;
             this.onmatch(this.inputs[inputIndex], this.targets[targetIndex], nearestMatch.distance);
             
             // Make sure this input is also the target's best match
-            if (this.bestMatches[targetIndex].index !== inputIndex) console.warn('Reporting match on sub-optimal match');
+            if (this.bestMatches[targetIndex].inputIndex !== inputIndex) console.warn('Reporting match on sub-optimal match');
             
             // Remove the object from array (keeping indexes)
             delete this.targets[targetIndex];
@@ -193,7 +192,7 @@
         
         // Remove the object from array (keeping indexes)
         delete this.inputs[inputIndex];
-        delete this.inputDistances[inputIndex];
+        delete this.inputMatches[inputIndex];
         
     }
 
