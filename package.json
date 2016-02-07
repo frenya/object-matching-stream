@@ -13,6 +13,10 @@
     "match",
     "stream"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/frenya/object-matching-stream.git"
+  },
   "author": "Frantisek Vymazal <frenya@f8.cz> (http://f8.cz)",
   "license": "MIT",
   "dependencies": {
