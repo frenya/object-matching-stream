@@ -34,29 +34,24 @@
 
         var distances = this.calculateTargetDistances(obj);
 
-        // Check whether we found an identical match or miss completely
-        // in such case, report the item, otherwise add it to the input list
-        // and update best matches
-        var nearestMatch = distances[0];
-        if (!this.reportMatchOrMiss(obj, nearestMatch, true)) {
-            // Update the distance matrix and perform matchup
-            var inputIndex = this.inputs.length;
-            this.inputs.push(obj);
-            this.inputDistances.push(distances);
+        var inputIndex = this.inputs.length;
+        this.inputs.push(obj);
+        this.inputDistances.push(distances);
 
-            this.findBestMatchForIndex(inputIndex);
-
-            // debug('Current state');
-            // debug(this.inputDistances);
-        }
+        this.findBestMatchForIndex(inputIndex);
 
     }
 
     ObjectMatcher.prototype.end = function () {
 
-        for (var i = 0; i < this.inputs.length; i++) {
-            this.reportMatchOrMiss(this.inputs[i], this.inputDistances[i][0], false);
-        }
+        var me = this;
+        this.inputs.forEach(function (input, index) {
+            me.reportInput(index);
+        });
+        
+        this.targets.forEach(function (target) {
+            me.onmiss(null, target); 
+        });
 
     }
 
@@ -67,6 +62,14 @@
     /**
 	 * Generates an array of tuples (target id, distance) 
 	 * in increasing order of distance.
+     *
+     * Ignores all matches farther than the max distance
+     * or target's current best match's distance.
+     *
+     * NOTE:
+     * - the map() function ignores deleted items (i.e. only valid targets are measured)
+     * - the filter() function removes all non-eligible distances
+     * - the sort() function makes sure better match always precedes a worse one
 	 */
     ObjectMatcher.prototype.calculateTargetDistances = function(obj) {
 
@@ -99,7 +102,7 @@
         var distances = this.inputDistances[inputIndex];
         debug('in ' + JSON.stringify(distances));
 
-        while ((distances.length > 0) && distances[0]) {
+        while (distances.length > 0) {
             var dist = distances[0],
                 targetBestMatch = this.bestMatches[dist.index];		// This is the target's best match so far
 
@@ -108,6 +111,9 @@
                 this.bestMatches[dist.index] = { index: inputIndex, distance: dist.distance };
                 debug('=> ' + this.targets[dist.index] + '[' + dist.distance + ']');
 
+                // If this is a perfect match, report it now
+                if (dist.distance === 0) this.reportInput(inputIndex);
+                
                 // Recursively find best match for the input we just replaced
                 if (targetBestMatch) this.findBestMatchForIndex(targetBestMatch.index);
 
@@ -117,9 +123,43 @@
             // Remove the first item and continue with the next best match
             distances.shift();
         }
+        
+        // This object is now a MISS
+        if (distances.length === 0) this.reportInput(inputIndex);
 
     }
+    
+    ObjectMatcher.prototype.reportInput = function (inputIndex) {
+        
+        var distances = this.inputDistances[inputIndex],
+            nearestMatch = distances[0];
+        
+        if (nearestMatch) {
+            // if (nearestMatch.distance !== 0) return;
+            
+            var targetIndex = nearestMatch.index;
+            this.onmatch(this.inputs[inputIndex], this.targets[targetIndex], nearestMatch.distance);
+            
+            // Make sure this input is also the target's best match
+            if (this.bestMatches[targetIndex].index !== inputIndex) console.warn('Reporting match on sub-optimal match');
+            
+            // Remove the object from array (keeping indexes)
+            delete this.targets[targetIndex];
+            // Leave best matches untouched so that further calls see the better match
+            // (the targets is ignored by new inputs, but older inputs might still have it as match)
+            // NO: delete this.bestMatches[targetIndex];
+        }
+        else {
+            this.onmiss(this.inputs[inputIndex], null);
+        }
+        
+        // Remove the object from array (keeping indexes)
+        delete this.inputs[inputIndex];
+        delete this.inputDistances[inputIndex];
+        
+    }
 
+    /*
     ObjectMatcher.prototype.reportMatchOrMiss = function(obj, nearestMatch, reportOnlyIdenticalAndRemoveThem) {
 
         if (!nearestMatch || nearestMatch.distance > this.maxDistance) {
@@ -146,6 +186,7 @@
         return true;
 
     }
+    */
 
     // Supporting methods
 
