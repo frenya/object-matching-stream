@@ -32,19 +32,24 @@
 
     }
 
-    ObjectMatcher.prototype.push = function (obj) {
+    /**
+     * Main entry method. Takes a given input and runs it
+     * through the matching matrix.
+     */
+    ObjectMatcher.prototype.push = function (input) {
 
-        debug('Processing ' + obj);
+        debug('Processing ' + input);
 
-        var distances = this.calculateTargetDistances(obj);
+        var distances = this.calculateTargetDistances(input);
 
         var inputIndex = this.inputs.length;
-        this.inputs.push(obj);
+        this.inputs.push(input);
         this.inputDistances.push(distances);
 
         // Update best matches (recursively)
         this.findBestMatchForIndex(inputIndex);
 
+        // Update high water mark (performance diagnostics)
         var hwm = this.arraySizes.reduce(function (a, b) { return a + b; }, 0);
         this.matrixSizeHWM = Math.max(this.matrixSizeHWM, hwm);
         
@@ -52,14 +57,17 @@
 
     ObjectMatcher.prototype.end = function () {
 
-        // Report the high water mark
+        // Log the high water mark to console
         debug('HWM: ' + this.matrixSizeHWM);
 
         var me = this;
+        
+        // Report unmatched inputs (skips deleted)
         this.inputs.forEach(function (input, index) {
             me.reportInput(index);
         });
         
+        // Report unmatched targets (skips deleted)
         this.targets.forEach(function (target) {
             me.onmiss(null, target); 
         });
@@ -82,11 +90,11 @@
      * - the filter() function removes all non-eligible distances
      * - the sort() function makes sure better match always precedes a worse one
 	 */
-    ObjectMatcher.prototype.calculateTargetDistances = function(obj) {
+    ObjectMatcher.prototype.calculateTargetDistances = function(input) {
 
         var me = this;
         var distances = this.targets.map(function(target, i) {
-            var dist = me.distanceFunction(obj, target);
+            var dist = me.distanceFunction(input, target);
             return (target !== null) ? { index: i, distance: dist } : null;
         }).filter(function(match) {
             // Don't store invalid or too distant matches
@@ -104,6 +112,17 @@
 
     }
 
+    /**
+     * Goes through  all the eligible matches for a give input
+     * (by shifting the inputDistances[inputIndex] array)
+     * until it finds one that is the best match for a particular target.
+     *
+     * If successful, updates the bestMatches array and when applicable
+     * continues recursively for the input that was previously matched
+     * with the given target.
+     *
+     * Reports perfect matches (distance = 0) and misses (no eligible matches left).
+     */
     ObjectMatcher.prototype.findBestMatchForIndex = function(inputIndex) {
 
         debug(inputIndex + ': ' +  this.inputs[inputIndex]);
@@ -143,6 +162,11 @@
 
     }
     
+    /**
+     * Calls this.onmiss or this.onmatch callback for given input
+     * and removes both the input and the matched target (on match)
+     * from their respective arrays.
+     */
     ObjectMatcher.prototype.reportInput = function (inputIndex) {
         
         var distances = this.inputDistances[inputIndex],
