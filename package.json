@@ -21,7 +21,8 @@
   "license": "MIT",
   "dependencies": {
     "debug": "^2.2.0",
-    "fast-levenshtein": "^1.1.0"
+    "fast-levenshtein": "^1.1.0",
+    "streamtest": "^1.2.1"
   },
   "devDependencies": {
     "chai": "^3.5.0",
