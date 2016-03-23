@@ -1,2 +1,4 @@
 node_modules
 coverage
+.legacy
+matching_simulation.xlsx
